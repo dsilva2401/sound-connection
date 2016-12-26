@@ -10,6 +10,11 @@
 				height: 100%;
 				background: #EEE;
 			}
+			.btns-container {
+				position: absolute;
+				right: 0px;
+				bottom: 0px;
+			}
 		</style>
 	</head>
 
@@ -17,12 +22,30 @@
 
 		<div id="container" class="cover"></div>
 
+		<div class="btns-container">
+			<button id="listen-btn">Listen</button>
+			<button id="train-btn">Train</button>
+		</div>
+
 		<script>
 			var avsNumber = 20;
 			var session = {
 			  audio: true,
 			  video: false
 			};
+
+			var listenBtn = document.getElementById('listen-btn');
+			var trainBtn = document.getElementById('train-btn');
+			listenBtn.listenStatus = false;
+			listenBtn.onclick = function () {
+				if (listenBtn.listenStatus) {
+					listenBtn.innerHTML = 'Stop listening';
+					listenBtn.listenStatus = true;
+				} else {
+					listenBtn.innerHTML = 'Listen';
+					listenBtn.listenStatus = false;
+				}
+			}
 
 			function getRepresentativeValues (values) {
 				var buffCounter = 0;
