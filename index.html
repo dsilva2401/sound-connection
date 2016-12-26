@@ -15,9 +15,7 @@
 
 	<body>
 
-		<div id="container" class="cover">
-
-		</div>
+		<div id="container" class="cover"></div>
 
 		<script>
 			var avsNumber = 20;
@@ -25,6 +23,44 @@
 			  audio: true,
 			  video: false
 			};
+
+			function getRepresentativeValues (values) {
+				var buffCounter = 0;
+				var cutsCounter = 0;
+				var buffArray = [];
+				var rArraysData = [];
+				for (var i=0; i<values.length-1; i++) {
+					if (values[i]*values[i+1]<0) {
+						buffCounter++;
+						cutsCounter++;
+					}
+					if (buffCounter==3) {
+						var rArrayData = {};
+						rArrayData.pitch = buffArray.length;
+						var minAmplitude = buffArray[0];
+						var maxAmplitude = buffArray[0];
+						buffArray.forEach(function (value) {
+							minAmplitude = Math.min(minAmplitude, value);
+							maxAmplitude = Math.max(maxAmplitude, value);
+						});
+						rArrayData.amplitude = maxAmplitude - minAmplitude;
+						rArraysData.push(rArrayData);
+						buffArray = [];
+						buffCounter = 0;
+					} else {
+						buffArray.push(values[i]);
+					}
+				}
+				var avRValue = { pitch: 0, amplitude: 0 };
+				for (var i=0; i<rArraysData.length; i++) {
+					avRValue.pitch += rArraysData[i].pitch;
+					avRValue.amplitude += rArraysData[i].amplitude;
+				}
+				avRValue.pitch /= rArraysData.length;
+				avRValue.amplitude /= rArraysData.length;
+				return avRValue;
+			}
+
 			function initContainer (barsNumber) {
 				for (var i=0; i<barsNumber; i++) {
 					var container = document.getElementById('container');
@@ -35,7 +71,7 @@
 					elem.style.left = (i*spaceAvgPercentage)+'%';
 					elem.style.bottom = 0;
 					elem.style.width = spaceAvgPercentage+'%';
-					elem.style.height = 10+'%'
+					elem.style.height = 10+'%';
 					elem.style.background = 'grey';
 					elem.style.overflow = 'hidden';
 					container.appendChild(elem)
@@ -85,14 +121,12 @@
 			var left;
 			function recorderProcess(e) {
 			  left = e.inputBuffer.getChannelData(0);
-			  //console.log( getAverages(10, left) )
-			  //console.log(Date.now())
 			}
 			setInterval(function () {
-				//console.log(left, left.length);
-				//console.log( getAverages(avsNumber, left) )
 				var values = getAverages(avsNumber, left);
-				setupBars(values)
+				setupBars(values);
+				var rData = getRepresentativeValues(left);
+				console.log(rData)
 			}, 500);
 			initContainer(avsNumber);
 
