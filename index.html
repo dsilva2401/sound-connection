@@ -1,0 +1,104 @@
+<html>
+
+	<head>
+		<style>
+			.cover {
+				position: absolute;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				background: #EEE;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<div id="container" class="cover">
+
+		</div>
+
+		<script>
+			var avsNumber = 20;
+			var session = {
+			  audio: true,
+			  video: false
+			};
+			function initContainer (barsNumber) {
+				for (var i=0; i<barsNumber; i++) {
+					var container = document.getElementById('container');
+					var spaceAvgPercentage = Math.floor(100/barsNumber);
+					var elem = document.createElement('div');
+					elem.style.position = 'absolute';
+					elem.id = 'bar-'+i;
+					elem.style.left = (i*spaceAvgPercentage)+'%';
+					elem.style.bottom = 0;
+					elem.style.width = spaceAvgPercentage+'%';
+					elem.style.height = 10+'%'
+					elem.style.background = 'grey';
+					elem.style.overflow = 'hidden';
+					container.appendChild(elem)
+				}
+			}
+
+			function setupBars (values) {
+				for (var i=0; i<values.length-1; i++) {
+					document.getElementById('bar-'+i).innerHTML = (values[i]+1)/2*100
+					document.getElementById('bar-'+i).style.height = ((values[i]+1)/2*100)+'%';
+				}
+			}
+
+			function getAverages (avsNumber, values) {
+				avsNumber++;
+				var avs = [];
+				var blockSize = Math.floor(values.length/avsNumber);
+				var blocksNumber = Math.floor(values.length/blockSize);
+				for (var i=0; i<values.length; i+=blockSize) {
+					//var avg = values[i*blockSize];
+					var avg = 0;
+					for (var j=i; j<i+blockSize; j++) {
+						avg += values[j];
+					}
+					avg /= blockSize;
+					avs.push(avg);
+				}
+				avs.pop()
+				return avs;
+			}
+
+			function initializeRecorder(stream) {
+			  var audioContext = window.AudioContext;
+			  var context = new audioContext();
+			  var audioInput = context.createMediaStreamSource(stream);
+			  var bufferSize = 1024;
+			  // create a javascript node
+			  var recorder = context.createScriptProcessor(bufferSize, 1, 1);
+			  // specify the processing function
+			  recorder.onaudioprocess = recorderProcess;
+			  // connect stream to our recorder
+			  audioInput.connect(recorder);
+			  // connect our recorder to the previous destination
+			  recorder.connect(context.destination);
+			}
+
+			var left;
+			function recorderProcess(e) {
+			  left = e.inputBuffer.getChannelData(0);
+			  //console.log( getAverages(10, left) )
+			  //console.log(Date.now())
+			}
+			setInterval(function () {
+				//console.log(left, left.length);
+				//console.log( getAverages(avsNumber, left) )
+				var values = getAverages(avsNumber, left);
+				setupBars(values)
+			}, 500);
+			initContainer(avsNumber);
+
+			navigator.getUserMedia(session, initializeRecorder, console.warn);
+
+		</script>
+	</body>
+
+</html>
